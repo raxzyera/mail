@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Login & Bulk Email</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, textarea, button { margin: 8px 0; padding: 8px; width: 100%; max-width: 400px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div id="authSection">
+    <h2>Login / Register</h2>
+    <input type="text" id="loginUsername" placeholder="Username"><br>
+    <input type="password" id="loginPassword" placeholder="Password"><br>
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+    <p id="authMessage" style="color: red;"></p>
+  </div>
+
+  <div id="formSection" class="hidden">
+    <h2>Isi Banyak Email & Password</h2>
+    <form id="formData">
+      <textarea id="emails" placeholder="Email per baris / koma" rows="6" required></textarea><br>
+      <input type="password" id="dataPassword" placeholder="Password untuk semua" required><br>
+      <button type="submit">Kirim Data</button>
+    </form>
+    <pre id="log"></pre>
+  </div>
+
+  <script>
+    const token = "GITHUB_TOKEN"; // Ganti token GitHub kamu
+    const owner = "USERNAME";     // Ganti dengan username kamu
+    const repo = "form-data-db";  // Nama repo
+    const userPath = "data_users.json";
+    const dataPath = "data.json";
+
+    let currentUser = null;
+
+    async function getFile(path) {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return res.json();
+    }
+
+    async function updateFile(path, content, sha, message) {
+      return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: message,
+          content: btoa(JSON.stringify(content, null, 2)),
+          sha: sha
+        })
+      }).then(r => r.json());
+    }
+
+    async function register() {
+      const u = document.getElementById("loginUsername").value;
+      const p = document.getElementById("loginPassword").value;
+      if (!u || !p) return alert("Isi semua field!");
+
+      const file = await getFile(userPath);
+      const users = JSON.parse(atob(file.content));
+      if (users.find(x => x.username === u)) {
+        return alert("Username sudah ada!");
+      }
+
+      users.push({ username: u, password: p });
+      await updateFile(userPath, users, file.sha, `Register user ${u}`);
+      alert("Berhasil daftar. Silakan login.");
+    }
+
+    async function login() {
+      const u = document.getElementById("loginUsername").value;
+      const p = document.getElementById("loginPassword").value;
+      const file = await getFile(userPath);
+      const users = JSON.parse(atob(file.content));
+      const found = users.find(x => x.username === u && x.password === p);
+      if (!found) {
+        document.getElementById("authMessage").textContent = "Login gagal!";
+        return;
+      }
+
+      currentUser = u;
+      localStorage.setItem("username", u);
+      document.getElementById("authSection").classList.add("hidden");
+      document.getElementById("formSection").classList.remove("hidden");
+    }
+
+    document.getElementById("formData").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const username = localStorage.getItem("username");
+      const rawEmails = document.getElementById("emails").value;
+      const password = document.getElementById("dataPassword").value;
+      const emails = rawEmails.split(/[\n,]+/).map(e => e.trim()).filter(Boolean);
+      if (emails.length === 0) return alert("Isi minimal satu email!");
+
+      const file = await getFile(dataPath);
+      const data = JSON.parse(atob(file.content));
+      const now = new Date().toISOString();
+
+      emails.forEach(email => {
+        data.push({ username, email, password, time: now });
+      });
+
+      await updateFile(dataPath, data, file.sha, `Tambah ${emails.length} data oleh ${username}`);
+      document.getElementById("log").textContent = `Sukses kirim ${emails.length} email.`;
+    });
+  </script>
+</body>
+</html>
