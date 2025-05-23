@@ -1,117 +1,547 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Form Login & Bulk Email</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, textarea, button { margin: 8px 0; padding: 8px; width: 100%; max-width: 400px; }
-    .hidden { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Bulk Email Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .btn {
+            margin-bottom: 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .email-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="authSection">
+            <h2>🔐 Authentication</h2>
+            <div id="authMessage"></div>
+            
+            <div class="input-group">
+                <input type="text" id="loginUsername" placeholder="Enter username" maxlength="50">
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="loginPassword" placeholder="Enter password" maxlength="100">
+            </div>
+            
+            <div class="form-row">
+                <button class="btn btn-secondary" onclick="register()" id="registerBtn">
+                    Register
+                </button>
+                <button class="btn btn-primary" onclick="login()" id="loginBtn">
+                    Login
+                </button>
+            </div>
+        </div>
 
-  <div id="authSection">
-    <h2>Login / Register</h2>
-    <input type="text" id="loginUsername" placeholder="Username"><br>
-    <input type="password" id="loginPassword" placeholder="Password"><br>
-    <button onclick="register()">Register</button>
-    <button onclick="login()">Login</button>
-    <p id="authMessage" style="color: red;"></p>
-  </div>
+        <!-- Main Form Section -->
+        <div id="formSection" class="hidden">
+            <h2>📧 Bulk Email Manager</h2>
+            <div id="formMessage"></div>
+            
+            <form id="formData">
+                <div class="input-group">
+                    <textarea 
+                        id="emails" 
+                        placeholder="Enter emails (one per line or comma-separated)&#10;Example:&#10;user1@example.com&#10;user2@example.com, user3@example.com"
+                        rows="6" 
+                        required
+                    ></textarea>
+                    <div id="emailPreview" class="email-preview hidden"></div>
+                </div>
+                
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        id="dataPassword" 
+                        placeholder="Password for all emails" 
+                        required
+                        maxlength="100"
+                    >
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    Submit Data
+                </button>
+                
+                <div class="stats">
+                    <span id="emailCount">0 emails</span>
+                    <span id="currentUser"></span>
+                </div>
+            </form>
+            
+            <div id="log" class="log hidden"></div>
+            
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">
+                Logout
+            </button>
+        </div>
+    </div>
 
-  <div id="formSection" class="hidden">
-    <h2>Isi Banyak Email & Password</h2>
-    <form id="formData">
-      <textarea id="emails" placeholder="Email per baris / koma" rows="6" required></textarea><br>
-      <input type="password" id="dataPassword" placeholder="Password untuk semua" required><br>
-      <button type="submit">Kirim Data</button>
-    </form>
-    <pre id="log"></pre>
-  </div>
+    <script>
+        // Configuration - Replace with your actual values
+        const CONFIG = {
+            token: "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", // Replace with your GitHub token
+            owner: "raxzyera", // Replace with your GitHub username
+            repo: "form-data-db", // Replace with your repository name
+            userPath: "data_users.json",
+            dataPath: "data.json"
+        };
 
-  <script>
-    const token = "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"; // Ganti token GitHub kamu
-    const owner = "raxzyera";     // Ganti dengan username kamu
-    const repo = "form-data-db";  // Nama repo
-    const userPath = "data_users.json";
-    const dataPath = "data.json";
+        let currentUser = null;
+        let emailCount = 0;
 
-    let currentUser = null;
+        // Utility functions
+        function showMessage(elementId, message, type = 'error') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
 
-    async function getFile(path) {
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return res.json();
-    }
+        function setLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span>Loading...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn.id === 'registerBtn' ? 'Register' : 
+                               btn.id === 'loginBtn' ? 'Login' : 'Submit Data';
+            }
+        }
 
-    async function updateFile(path, content, sha, message) {
-      return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: message,
-          content: btoa(JSON.stringify(content, null, 2)),
-          sha: sha
-        })
-      }).then(r => r.json());
-    }
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
 
-    async function register() {
-      const u = document.getElementById("loginUsername").value;
-      const p = document.getElementById("loginPassword").value;
-      if (!u || !p) return alert("Isi semua field!");
+        function updateEmailPreview() {
+            const rawEmails = document.getElementById('emails').value;
+            const emails = rawEmails.split(/[\n,]+/).map(e => e.trim()).filter(Boolean);
+            const validEmails = emails.filter(validateEmail);
+            const invalidEmails = emails.filter(e => !validateEmail(e));
+            
+            emailCount = validEmails.length;
+            document.getElementById('emailCount').textContent = `${emailCount} valid emails`;
+            
+            const preview = document.getElementById('emailPreview');
+            if (emails.length > 0) {
+                preview.classList.remove('hidden');
+                preview.innerHTML = `
+                    <strong>Valid:</strong> ${validEmails.length} emails<br>
+                    <strong>Invalid:</strong> ${invalidEmails.length} emails
+                    ${invalidEmails.length > 0 ? '<br><span style="color: #dc3545;">Invalid: ' + invalidEmails.slice(0, 3).join(', ') + (invalidEmails.length > 3 ? '...' : '') + '</span>' : ''}
+                `;
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
 
-      const file = await getFile(userPath);
-      const users = JSON.parse(atob(file.content));
-      if (users.find(x => x.username === u)) {
-        return alert("Username sudah ada!");
-      }
+        // GitHub API functions
+        async function makeGitHubRequest(path, options = {}) {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${path}`, {
+                    headers: { 
+                        Authorization: `Bearer ${CONFIG.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('GitHub API Error:', error);
+                throw new Error('Failed to connect to database. Please check your configuration.');
+            }
+        }
 
-      users.push({ username: u, password: p });
-      await updateFile(userPath, users, file.sha, `Register user ${u}`);
-      alert("Berhasil daftar. Silakan login.");
-    }
+        async function getFile(path) {
+            return await makeGitHubRequest(path);
+        }
 
-    async function login() {
-      const u = document.getElementById("loginUsername").value;
-      const p = document.getElementById("loginPassword").value;
-      const file = await getFile(userPath);
-      const users = JSON.parse(atob(file.content));
-      const found = users.find(x => x.username === u && x.password === p);
-      if (!found) {
-        document.getElementById("authMessage").textContent = "Login gagal!";
-        return;
-      }
+        async function updateFile(path, content, sha, message) {
+            return await makeGitHubRequest(path, {
+                method: "PUT",
+                body: JSON.stringify({
+                    message: message,
+                    content: btoa(JSON.stringify(content, null, 2)),
+                    sha: sha
+                })
+            });
+        }
 
-      currentUser = u;
-      localStorage.setItem("username", u);
-      document.getElementById("authSection").classList.add("hidden");
-      document.getElementById("formSection").classList.remove("hidden");
-    }
+        // Authentication functions
+        async function register() {
+            const username = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+            
+            if (!username || !password) {
+                showMessage('authMessage', 'Please fill in all fields!');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showMessage('authMessage', 'Username must be at least 3 characters!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('authMessage', 'Password must be at least 6 characters!');
+                return;
+            }
 
-    document.getElementById("formData").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const username = localStorage.getItem("username");
-      const rawEmails = document.getElementById("emails").value;
-      const password = document.getElementById("dataPassword").value;
-      const emails = rawEmails.split(/[\n,]+/).map(e => e.trim()).filter(Boolean);
-      if (emails.length === 0) return alert("Isi minimal satu email!");
+            setLoading('registerBtn', true);
+            
+            try {
+                const file = await getFile(CONFIG.userPath);
+                const users = JSON.parse(atob(file.content));
+                
+                if (users.find(user => user.username === username)) {
+                    showMessage('authMessage', 'Username already exists!');
+                    return;
+                }
 
-      const file = await getFile(dataPath);
-      const data = JSON.parse(atob(file.content));
-      const now = new Date().toISOString();
+                users.push({ 
+                    username, 
+                    password, // In production, hash this password!
+                    created: new Date().toISOString()
+                });
+                
+                await updateFile(CONFIG.userPath, users, file.sha, `Register user: ${username}`);
+                showMessage('authMessage', 'Registration successful! Please login.', 'success');
+                
+                // Clear form
+                document.getElementById("loginUsername").value = '';
+                document.getElementById("loginPassword").value = '';
+                
+            } catch (error) {
+                showMessage('authMessage', error.message);
+            } finally {
+                setLoading('registerBtn', false);
+            }
+        }
 
-      emails.forEach(email => {
-        data.push({ username, email, password, time: now });
-      });
+        async function login() {
+            const username = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+            
+            if (!username || !password) {
+                showMessage('authMessage', 'Please fill in all fields!');
+                return;
+            }
 
-      await updateFile(dataPath, data, file.sha, `Tambah ${emails.length} data oleh ${username}`);
-      document.getElementById("log").textContent = `Sukses kirim ${emails.length} email.`;
-    });
-  </script>
+            setLoading('loginBtn', true);
+            
+            try {
+                const file = await getFile(CONFIG.userPath);
+                const users = JSON.parse(atob(file.content));
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                if (!user) {
+                    showMessage('authMessage', 'Invalid username or password!');
+                    return;
+                }
+
+                currentUser = username;
+                document.getElementById('currentUser').textContent = `Logged in as: ${username}`;
+                document.getElementById("authSection").classList.add("hidden");
+                document.getElementById("formSection").classList.remove("hidden");
+                
+            } catch (error) {
+                showMessage('authMessage', error.message);
+            } finally {
+                setLoading('loginBtn', false);
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById("authSection").classList.remove("hidden");
+            document.getElementById("formSection").classList.add("hidden");
+            document.getElementById("loginUsername").value = '';
+            document.getElementById("loginPassword").value = '';
+            document.getElementById("emails").value = '';
+            document.getElementById("dataPassword").value = '';
+            document.getElementById("log").classList.add("hidden");
+        }
+
+        // Form submission
+        document.getElementById("formData").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const rawEmails = document.getElementById("emails").value;
+            const password = document.getElementById("dataPassword").value.trim();
+            const emails = rawEmails.split(/[\n,]+/).map(e => e.trim()).filter(Boolean);
+            const validEmails = emails.filter(validateEmail);
+            
+            if (validEmails.length === 0) {
+                showMessage('formMessage', 'Please enter at least one valid email!');
+                return;
+            }
+            
+            if (!password) {
+                showMessage('formMessage', 'Please enter a password!');
+                return;
+            }
+
+            setLoading('submitBtn', true);
+            
+            try {
+                const file = await getFile(CONFIG.dataPath);
+                const data = JSON.parse(atob(file.content));
+                const timestamp = new Date().toISOString();
+
+                validEmails.forEach(email => {
+                    data.push({ 
+                        username: currentUser, 
+                        email, 
+                        password, // In production, hash this password!
+                        timestamp,
+                        id: Date.now() + Math.random()
+                    });
+                });
+
+                await updateFile(CONFIG.dataPath, data, file.sha, 
+                    `Add ${validEmails.length} emails by ${currentUser}`);
+                
+                const logElement = document.getElementById("log");
+                logElement.classList.remove("hidden");
+                logElement.textContent = `✅ Successfully submitted ${validEmails.length} emails at ${new Date().toLocaleString()}`;
+                
+                showMessage('formMessage', `Successfully submitted ${validEmails.length} emails!`, 'success');
+                
+                // Clear form
+                document.getElementById("emails").value = '';
+                document.getElementById("dataPassword").value = '';
+                updateEmailPreview();
+                
+            } catch (error) {
+                showMessage('formMessage', error.message);
+            } finally {
+                setLoading('submitBtn', false);
+            }
+        });
+
+        // Event listeners
+        document.getElementById('emails').addEventListener('input', updateEmailPreview);
+
+        // Initialize
+        document.getElementById('currentUser').textContent = '';
+        updateEmailPreview();
+        
+        // Check configuration
+        if (CONFIG.token === "YOUR_GITHUB_TOKEN_HERE") {
+            showMessage('authMessage', 'Please configure your GitHub token in the code!');
+        }
+    </script>
 </body>
 </html>
